@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
+
 import { expect } from 'chai';
 
 import * as firebaseExport from '../util/firebase_export';
@@ -27,7 +27,7 @@ const apiDescribe = integrationHelpers.apiDescribe;
 apiDescribe('Database transactions', (persistence: boolean) => {
   type TransactionStage = (
     transaction: firestore.Transaction,
-    docRef: firestore.DocumentReference
+    docRef: DocumentReference
   ) => void;
 
   /**
@@ -37,42 +37,42 @@ apiDescribe('Database transactions', (persistence: boolean) => {
    */
   async function delete1(
     transaction: firestore.Transaction,
-    docRef: firestore.DocumentReference
+    docRef: DocumentReference
   ): Promise<void> {
     transaction.delete(docRef);
   }
 
   async function update1(
     transaction: firestore.Transaction,
-    docRef: firestore.DocumentReference
+    docRef: DocumentReference
   ): Promise<void> {
     transaction.update(docRef, { foo: 'bar1' });
   }
 
   async function update2(
     transaction: firestore.Transaction,
-    docRef: firestore.DocumentReference
+    docRef: DocumentReference
   ): Promise<void> {
     transaction.update(docRef, { foo: 'bar2' });
   }
 
   async function set1(
     transaction: firestore.Transaction,
-    docRef: firestore.DocumentReference
+    docRef: DocumentReference
   ): Promise<void> {
     transaction.set(docRef, { foo: 'bar1' });
   }
 
   async function set2(
     transaction: firestore.Transaction,
-    docRef: firestore.DocumentReference
+    docRef: DocumentReference
   ): Promise<void> {
     transaction.set(docRef, { foo: 'bar2' });
   }
 
   async function get(
     transaction: firestore.Transaction,
-    docRef: firestore.DocumentReference
+    docRef: DocumentReference
   ): Promise<void> {
     await transaction.get(docRef);
   }
@@ -88,9 +88,9 @@ apiDescribe('Database transactions', (persistence: boolean) => {
    * transaction to run and assert that the end result matches the input.
    */
   class TransactionTester {
-    constructor(readonly db: firestore.FirebaseFirestore) {}
+    constructor(readonly db: Firestore) {}
 
-    private docRef!: firestore.DocumentReference;
+    private docRef!: DocumentReference;
     private fromExistingDoc: boolean = false;
     private stages: TransactionStage[] = [];
 
@@ -113,7 +113,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
       try {
         await this.prepareDoc();
         await this.runTransaction();
-        const snapshot = await this.docRef.get();
+        const snapshot = await this.getDoc(docRef, ();
         expect(snapshot.exists).to.equal(true);
         expect(snapshot.data()).to.deep.equal(expected);
       } catch (err) {
@@ -131,7 +131,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
       try {
         await this.prepareDoc();
         await this.runTransaction();
-        const snapshot = await this.docRef.get();
+        const snapshot = await this.getDoc(docRef, ();
         expect(snapshot.exists).to.equal(false);
       } catch (err) {
         expect.fail(
@@ -165,9 +165,9 @@ apiDescribe('Database transactions', (persistence: boolean) => {
     }
 
     private async prepareDoc(): Promise<void> {
-      this.docRef = this.db.collection('tester-docref').doc();
+      this.docRef = this.collection(db,'tester-docref').doc();
       if (this.fromExistingDoc) {
-        await this.docRef.set({ foo: 'bar0' });
+        await this.setDoc(docRef, { foo: 'bar0' });
       }
     }
 
@@ -182,7 +182,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
     private cleanupTester(): void {
       this.stages = [];
       // Set the docRef to something else to lose the original reference.
-      this.docRef = this.db.collection('reset').doc();
+      this.docRef = this.collection(db,'reset').doc();
     }
 
     private listStages(stages: TransactionStage[]): string {
@@ -338,7 +338,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
 
   it('set document with merge', () => {
     return integrationHelpers.withTestDb(persistence, db => {
-      const doc = db.collection('towns').doc();
+      const doc = collection(db,'towns').doc();
       return db
         .runTransaction(async transaction => {
           transaction.set(doc, { a: 'b', nested: { a: 'b' } }).set(
@@ -350,7 +350,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
           );
         })
         .then(() => {
-          return doc.get();
+          return getDoc(doc, ;
         })
         .then(snapshot => {
           expect(snapshot.exists).to.equal(true);
@@ -376,7 +376,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
     };
 
     return integrationHelpers.withTestDb(persistence, db => {
-      const doc = db.collection('counters').doc();
+      const doc = collection(db,'counters').doc();
       return db
         .runTransaction(async transaction => {
           transaction.set(doc, initialData);
@@ -388,7 +388,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
             true
           );
         })
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnapshot => {
           expect(docSnapshot.exists).to.be.ok;
           expect(docSnapshot.data()).to.deep.equal(finalData);
@@ -398,8 +398,8 @@ apiDescribe('Database transactions', (persistence: boolean) => {
 
   it('retry when a document that was read without being written changes', () => {
     return integrationHelpers.withTestDb(persistence, db => {
-      const doc1 = db.collection('counters').doc();
-      const doc2 = db.collection('counters').doc();
+      const doc1 = collection(db,'counters').doc();
+      const doc2 = collection(db,'counters').doc();
       let tries = 0;
       return doc1
         .set({
@@ -437,7 +437,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
     return integrationHelpers.withTestDb(persistence, db => {
       return db
         .runTransaction(transaction => {
-          const doc = db.collection('anything').doc();
+          const doc = collection(db,'anything').doc();
           transaction.set(doc, { foo: 'bar' });
           return transaction.get(doc);
         })
@@ -461,13 +461,13 @@ apiDescribe('Database transactions', (persistence: boolean) => {
       return integrationHelpers.withTestDb(persistence, db => {
         return db
           .runTransaction(transaction => {
-            const doc = db.collection('nonexistent').doc();
+            const doc = collection(db,'nonexistent').doc();
             return (
               transaction
                 // Get and update a document that doesn't exist so that the transaction fails.
                 .get(doc)
                 // Do a write outside of the transaction.
-                .then(() => doc.set({ count: 1234 }))
+                .then(() => setDoc(doc,{ count: 1234 }))
                 // Now try to update the doc from within the transaction. This
                 // should fail, because the document didn't exist at the start
                 // of the transaction.
@@ -521,8 +521,8 @@ apiDescribe('Database transactions', (persistence: boolean) => {
 
   it('can have gets without mutations', () => {
     return integrationHelpers.withTestDb(persistence, db => {
-      const docRef = db.collection('foo').doc();
-      const docRef2 = db.collection('foo').doc();
+      const docRef = collection(db,'foo').doc();
+      const docRef2 = collection(db,'foo').doc();
       return docRef
         .set({ foo: 'bar' })
         .then(() => {
@@ -545,7 +545,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
         .runTransaction(transaction => {
           // Make a transaction that should fail with a permanent error.
           counter++;
-          const doc = db.collection('nonexistent').doc();
+          const doc = collection(db,'nonexistent').doc();
           return (
             transaction
               // Get and update a document that doesn't exist so that the transaction fails.
@@ -569,7 +569,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
 
   it('are cancelled on rejected promise', () => {
     return integrationHelpers.withTestDb(persistence, db => {
-      const doc = db.collection('towns').doc();
+      const doc = collection(db,'towns').doc();
       let counter = 0;
       return db
         .runTransaction(transaction => {
@@ -582,10 +582,10 @@ apiDescribe('Database transactions', (persistence: boolean) => {
           expect(err).to.exist;
           expect(err).to.equal('no');
           expect(counter).to.equal(1);
-          return doc.get();
+          return getDoc(doc, ;
         })
         .then(snapshot => {
-          expect((snapshot as firestore.DocumentSnapshot).exists).to.equal(
+          expect((snapshot as DocumentSnapshot).exists).to.equal(
             false
           );
         });
@@ -594,7 +594,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
 
   it('are cancelled on throw', () => {
     return integrationHelpers.withTestDb(persistence, db => {
-      const doc = db.collection('towns').doc();
+      const doc = collection(db,'towns').doc();
       const failure = new Error('no');
       let count = 0;
       return db
@@ -608,10 +608,10 @@ apiDescribe('Database transactions', (persistence: boolean) => {
           expect(err).to.exist;
           expect(err).to.equal(failure);
           expect(count).to.equal(1);
-          return doc.get();
+          return getDoc(doc, ;
         })
         .then(snapshot => {
-          expect((snapshot as firestore.DocumentSnapshot).exists).to.equal(
+          expect((snapshot as DocumentSnapshot).exists).to.equal(
             false
           );
         });
@@ -634,7 +634,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
           .collection('posts')
           .doc()
           .withConverter({
-            toFirestore(post: Post): firestore.DocumentData {
+            toFirestore(post: Post): DocumentData {
               return { title: post.title, author: post.author };
             },
             fromFirestore(
@@ -645,7 +645,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
               return new Post(data.title, data.author);
             }
           });
-        return docRef.set(new Post('post', 'author')).then(() => {
+        return setDoc(docRef, new Post('post', 'author')).then(() => {
           return db
             .runTransaction(async transaction => {
               const snapshot = await transaction.get(docRef);
@@ -653,7 +653,7 @@ apiDescribe('Database transactions', (persistence: boolean) => {
               transaction.set(docRef, new Post('new post', 'author'));
             })
             .then(async () => {
-              const snapshot = await docRef.get();
+              const snapshot = await getDoc(docRef);
               expect(snapshot.data()!.byline()).to.equal('new post, by author');
             });
         });

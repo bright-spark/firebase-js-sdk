@@ -28,7 +28,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
   it('get document while online with default get options', () => {
     const initialData = { key: 'value' };
     return withTestDocAndInitialData(persistence, initialData, docRef => {
-      return docRef.get().then(doc => {
+      return getDoc(docRef, ().then(doc => {
         expect(doc.exists).to.be.true;
         expect(doc.metadata.fromCache).to.be.false;
         expect(doc.metadata.hasPendingWrites).to.be.false;
@@ -62,7 +62,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
       return docRef
         .get()
         .then(ignored => docRef.firestore.disableNetwork())
-        .then(() => docRef.get())
+        .then(() => getDoc(docRef, ())
         .then(doc => {
           expect(doc.exists).to.be.true;
           expect(doc.metadata.fromCache).to.be.true;
@@ -117,7 +117,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
       docRef.onSnapshot(() => {});
       return docRef
         .get()
-        .then(ignored => docRef.get({ source: 'cache' }))
+        .then(ignored => getDoc(docRef, ({ source: 'cache' }))
         .then(doc => {
           expect(doc.exists).to.be.true;
           expect(doc.metadata.fromCache).to.be.true;
@@ -159,7 +159,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
       return docRef
         .get()
         .then(ignored => docRef.firestore.disableNetwork())
-        .then(() => docRef.get({ source: 'cache' }))
+        .then(() => getDoc(docRef, ({ source: 'cache' }))
         .then(doc => {
           expect(doc.exists).to.be.true;
           expect(doc.metadata.fromCache).to.be.true;
@@ -210,7 +210,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
   it('get document while online with source=server', () => {
     const initialData = { key: 'value' };
     return withTestDocAndInitialData(persistence, initialData, docRef => {
-      return docRef.get({ source: 'server' }).then(doc => {
+      return getDoc(docRef, ({ source: 'server' }).then(doc => {
         expect(doc.exists).to.be.true;
         expect(doc.metadata.fromCache).to.be.false;
         expect(doc.metadata.hasPendingWrites).to.be.false;
@@ -242,7 +242,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
         .get({ source: 'server' })
         .then(ignored => {})
         .then(() => docRef.firestore.disableNetwork())
-        .then(() => docRef.get({ source: 'server' }))
+        .then(() => getDoc(docRef, ({ source: 'server' }))
         .then(
           doc => {
             expect.fail();
@@ -302,7 +302,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
             );
           });
         })
-        .then(() => docRef.get({ source: 'cache' }))
+        .then(() => getDoc(docRef, ({ source: 'cache' }))
         .then(doc => {
           expect(doc.exists).to.be.true;
           expect(doc.metadata.fromCache).to.be.true;
@@ -310,7 +310,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
           expect(doc.data()).to.deep.equal(initialData);
           return Promise.resolve();
         })
-        .then(() => docRef.get())
+        .then(() => getDoc(docRef, ())
         .then(doc => {
           expect(doc.exists).to.be.true;
           expect(doc.metadata.fromCache).to.be.true;
@@ -318,7 +318,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
           expect(doc.data()).to.deep.equal(initialData);
           return Promise.resolve();
         })
-        .then(() => docRef.get({ source: 'server' }))
+        .then(() => getDoc(docRef, ({ source: 'server' }))
         .then(
           doc => {
             expect.fail();
@@ -405,7 +405,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
 
   it('get non existing doc while online with default get options', () => {
     return withTestDocAndInitialData(persistence, null, docRef => {
-      return docRef.get().then(doc => {
+      return getDoc(docRef, ().then(doc => {
         expect(doc.exists).to.be.false;
         expect(doc.metadata.fromCache).to.be.false;
         expect(doc.metadata.hasPendingWrites).to.be.false;
@@ -431,7 +431,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
         docRef.firestore
           .disableNetwork()
           // Attempt to get doc. This will fail since there's nothing in cache.
-          .then(() => docRef.get())
+          .then(() => getDoc(docRef, ())
           .then(
             doc => {
               expect.fail();
@@ -451,7 +451,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
       return docRef
         .delete()
         .then(() => docRef.firestore.disableNetwork())
-        .then(() => docRef.get())
+        .then(() => getDoc(docRef, ())
         .then(doc => {
           expect(doc.exists).to.be.false;
           expect(doc.data()).to.be.undefined;
@@ -478,7 +478,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
   it('get non existing doc while online with source=cache', () => {
     return withTestDocAndInitialData(persistence, null, docRef => {
       // Attempt to get doc.  This will fail since there's nothing in cache.
-      return docRef.get({ source: 'cache' }).then(
+      return getDoc(docRef, ({ source: 'cache' }).then(
         doc => {
           expect.fail();
         },
@@ -504,7 +504,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
         docRef.firestore
           .disableNetwork()
           // Attempt to get doc.  This will fail since there's nothing in cache.
-          .then(() => docRef.get({ source: 'cache' }))
+          .then(() => getDoc(docRef, ({ source: 'cache' }))
           .then(
             doc => {
               expect.fail();
@@ -526,7 +526,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
             .delete()
             .then(() => docRef.firestore.disableNetwork())
             // Should get a document with exists=false, fromCache=true
-            .then(() => docRef.get({ source: 'cache' }))
+            .then(() => getDoc(docRef, ({ source: 'cache' }))
             .then(doc => {
               expect(doc.exists).to.be.false;
               expect(doc.data()).to.be.undefined;
@@ -554,7 +554,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
 
   it('get non existing doc while online with source=server', () => {
     return withTestDocAndInitialData(persistence, null, docRef => {
-      return docRef.get({ source: 'server' }).then(doc => {
+      return getDoc(docRef, ({ source: 'server' }).then(doc => {
         expect(doc.exists).to.be.false;
         expect(doc.metadata.fromCache).to.be.false;
         expect(doc.metadata.hasPendingWrites).to.be.false;
@@ -579,7 +579,7 @@ apiDescribe('GetOptions', (persistence: boolean) => {
         docRef.firestore
           .disableNetwork()
           // Attempt to get doc.  This will fail since there's nothing in cache.
-          .then(() => docRef.get({ source: 'server' }))
+          .then(() => getDoc(docRef, ({ source: 'server' }))
           .then(
             doc => {
               expect.fail();

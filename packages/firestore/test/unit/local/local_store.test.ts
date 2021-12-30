@@ -1401,7 +1401,7 @@ function genericLocalStoreTests(
         .afterMutations([
           patchMutation('foo/bar', { sum: FieldValue.increment(1) }),
           patchMutation('foo/bar', {
-            arrayUnion: FieldValue.arrayUnion('foo')
+            arrayUnion: arrayUnion('foo')
           })
         ])
         .toReturnChanged(

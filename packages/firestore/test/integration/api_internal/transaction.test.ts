@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
+
 import { expect } from 'chai';
 
 import { DEFAULT_MAX_ATTEMPTS_COUNT } from '../../../src/core/transaction_runner';
@@ -39,7 +39,7 @@ apiDescribe(
 
       return integrationHelpers.withTestDb(persistence, db => {
         asyncQueue(db).skipDelaysForTimerId(TimerId.TransactionRetry);
-        const doc = db.collection('counters').doc();
+        const doc = collection(db,'counters').doc();
         return doc
           .set({
             count: 5
@@ -77,7 +77,7 @@ apiDescribe(
           })
           .then(() => {
             // Now all transaction should be completed, so check the result.
-            return doc.get();
+            return getDoc(doc, ;
           })
           .then(snapshot => {
             expect(snapshot).to.exist;
@@ -96,7 +96,7 @@ apiDescribe(
 
       return integrationHelpers.withTestDb(persistence, db => {
         asyncQueue(db).skipDelaysForTimerId(TimerId.TransactionRetry);
-        const doc = db.collection('counters').doc();
+        const doc = collection(db,'counters').doc();
         return doc
           .set({
             count: 5,
@@ -138,7 +138,7 @@ apiDescribe(
             // There should be a maximum of 3 retries: once for the 2nd update,
             // and twice for the 3rd update.
             expect(counter).to.be.lessThan(7);
-            return doc.get();
+            return getDoc(doc, ;
           })
           .then(snapshot => {
             expect(snapshot).to.exist;
@@ -151,7 +151,7 @@ apiDescribe(
     it('handle reading a doc twice with different versions', () => {
       return integrationHelpers.withTestDb(persistence, db => {
         asyncQueue(db).skipDelaysForTimerId(TimerId.TransactionRetry);
-        const doc = db.collection('counters').doc();
+        const doc = collection(db,'counters').doc();
         let counter = 0;
         return doc
           .set({
@@ -166,7 +166,7 @@ apiDescribe(
                   .get(doc)
                   // Do a write outside of the transaction. Because the transaction
                   // will retry, set the document to a different value each time.
-                  .then(() => doc.set({ count: 1234 + counter }))
+                  .then(() => setDoc(doc,{ count: 1234 + counter }))
                   // Get the doc again in the transaction with the new
                   // version.
                   .then(() => transaction.get(doc))
@@ -181,7 +181,7 @@ apiDescribe(
             expect(err).to.exist;
             expect((err as firestore.FirestoreError).code).to.equal('aborted');
           })
-          .then(() => doc.get())
+          .then(() => getDoc(doc))
           .then(snapshot => {
             expect(snapshot.data()!['count']).to.equal(1234 + counter);
             expect(counter).to.equal(DEFAULT_MAX_ATTEMPTS_COUNT);

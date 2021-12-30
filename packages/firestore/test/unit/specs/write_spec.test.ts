@@ -681,7 +681,7 @@ describeSpec('Writes:', [], () => {
           .userListens(query1)
           .watchAcksFull(query1, 500, docV1)
           .expectEvents(query1, { added: [docV1] })
-          // <DELETE> is the sentinel for FieldValue.delete().
+          // <DELETE> is the sentinel for deleteField().
           .userPatches('collection/doc', { v: 2, 'a.c': '<DELETE>' })
           .expectEvents(query1, {
             hasPendingWrites: true,

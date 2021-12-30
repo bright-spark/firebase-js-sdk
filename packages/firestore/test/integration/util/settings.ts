@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
-
 /**
  * NOTE: These helpers are used by api/ tests and therefore may not have any
  * dependencies on src/ files.
@@ -47,7 +45,7 @@ export const DEFAULT_SETTINGS = getDefaultSettings();
 // eslint-disable-next-line no-console
 console.log(`Default Settings: ${JSON.stringify(DEFAULT_SETTINGS)}`);
 
-function getDefaultSettings(): firestore.Settings {
+function getDefaultSettings(): Settings {
   const karma = typeof __karma__ !== 'undefined' ? __karma__ : undefined;
   if (karma && karma.config.firestoreSettings) {
     return karma.config.firestoreSettings;

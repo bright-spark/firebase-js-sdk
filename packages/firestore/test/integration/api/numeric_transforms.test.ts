@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
 import { expect } from 'chai';
 
 import { EventsAccumulator } from '../util/events_accumulator';
@@ -28,20 +27,18 @@ const DOUBLE_EPSILON = 0.000001;
 
 apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   // A document reference to read and write to.
-  let docRef: firestore.DocumentReference;
+  let docRef: DocumentReference;
 
   // Accumulator used to capture events during the test.
-  let accumulator: EventsAccumulator<firestore.DocumentSnapshot>;
+  let accumulator: EventsAccumulator<DocumentSnapshot>;
 
   // Listener registration for a listener maintained during the course of the
   // test.
   let unsubscribe: () => void;
 
   /** Writes some initialData and consumes the events generated. */
-  async function writeInitialData(
-    initialData: firestore.DocumentData
-  ): Promise<void> {
-    await docRef.set(initialData);
+  async function writeInitialData(initialData: DocumentData): Promise<void> {
+    await setDoc(docRef, initialData);
     await accumulator.awaitLocalEvent();
     const snapshot = await accumulator.awaitRemoteEvent();
     expect(snapshot.data()).to.deep.equal(initialData);
@@ -61,7 +58,7 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   async function withTestSetup<T>(test: () => Promise<T>): Promise<void> {
     await withTestDoc(persistence, async doc => {
       docRef = doc;
-      accumulator = new EventsAccumulator<firestore.DocumentSnapshot>();
+      accumulator = new EventsAccumulator<DocumentSnapshot>();
       unsubscribe = docRef.onSnapshot(
         { includeMetadataChanges: true },
         accumulator.storeEvent
@@ -77,14 +74,18 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
 
   it('create document with increment', async () => {
     await withTestSetup(async () => {
-      await docRef.set({ sum: FieldValue.increment(1337) });
+      await setDoc(docRef, { sum: FieldValue.increment(1337) });
       await expectLocalAndRemoteValue(1337);
     });
   });
 
   it('merge on non-existing document with increment', async () => {
     await withTestSetup(async () => {
-      await docRef.set({ sum: FieldValue.increment(1337) }, { merge: true });
+      await setDoc(
+        docRef,
+        { sum: FieldValue.increment(1337) },
+        { merge: true }
+      );
       await expectLocalAndRemoteValue(1337);
     });
   });
@@ -92,7 +93,7 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   it('increment existing integer with integer', async () => {
     await withTestSetup(async () => {
       await writeInitialData({ sum: 1337 });
-      await docRef.update('sum', FieldValue.increment(1));
+      await updateDoc(docRef, 'sum', FieldValue.increment(1));
       await expectLocalAndRemoteValue(1338);
     });
   });
@@ -100,7 +101,7 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   it('increment existing double with double', async () => {
     await withTestSetup(async () => {
       await writeInitialData({ sum: 13.37 });
-      await docRef.update('sum', FieldValue.increment(0.1));
+      await updateDoc(docRef, 'sum', FieldValue.increment(0.1));
       await expectLocalAndRemoteValue(13.47);
     });
   });
@@ -108,7 +109,7 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   it('increment existing double with integer', async () => {
     await withTestSetup(async () => {
       await writeInitialData({ sum: 13.37 });
-      await docRef.update('sum', FieldValue.increment(1));
+      await updateDoc(docRef, 'sum', FieldValue.increment(1));
       await expectLocalAndRemoteValue(14.37);
     });
   });
@@ -116,7 +117,7 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   it('increment existing integer with double', async () => {
     await withTestSetup(async () => {
       await writeInitialData({ sum: 1337 });
-      await docRef.update('sum', FieldValue.increment(0.1));
+      await updateDoc(docRef, 'sum', FieldValue.increment(0.1));
       await expectLocalAndRemoteValue(1337.1);
     });
   });
@@ -124,7 +125,7 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   it('increment existing string with integer', async () => {
     await withTestSetup(async () => {
       await writeInitialData({ sum: 'overwrite' });
-      await docRef.update('sum', FieldValue.increment(1337));
+      await updateDoc(docRef, 'sum', FieldValue.increment(1337));
       await expectLocalAndRemoteValue(1337);
     });
   });
@@ -132,7 +133,7 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   it('increment existing string with double', async () => {
     await withTestSetup(async () => {
       await writeInitialData({ sum: 'overwrite' });
-      await docRef.update('sum', FieldValue.increment(13.37));
+      await updateDoc(docRef, 'sum', FieldValue.increment(13.37));
       await expectLocalAndRemoteValue(13.37);
     });
   });
@@ -140,7 +141,11 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
   it('increments with set() and merge:true', async () => {
     await withTestSetup(async () => {
       await writeInitialData({ sum: 1 });
-      await docRef.set({ sum: FieldValue.increment(1337) }, { merge: true });
+      await setDoc(
+        docRef,
+        { sum: FieldValue.increment(1337) },
+        { merge: true }
+      );
       await expectLocalAndRemoteValue(1338);
     });
   });
@@ -152,9 +157,9 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
       await docRef.firestore.disableNetwork();
 
       /* eslint-disable @typescript-eslint/no-floating-promises */
-      docRef.update('sum', FieldValue.increment(0.1));
-      docRef.update('sum', FieldValue.increment(0.01));
-      docRef.update('sum', FieldValue.increment(0.001));
+      updateDoc(docRef, 'sum', FieldValue.increment(0.1));
+      updateDoc(docRef, 'sum', FieldValue.increment(0.01));
+      updateDoc(docRef, 'sum', FieldValue.increment(0.001));
       /* eslint-enable @typescript-eslint/no-floating-promises */
 
       let snap = await accumulator.awaitLocalEvent();
@@ -190,7 +195,7 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
 
       const batch = docRef.firestore.batch();
       batch.update(docRef, 'sum', FieldValue.increment(1));
-      batch.update(docRef, 'sum', FieldValue.delete());
+      batch.update(docRef, 'sum', deleteField());
       batch.update(docRef, 'sum', FieldValue.increment(3));
       await batch.commit();
 
@@ -207,11 +212,11 @@ apiDescribe('Numeric Transforms:', (persistence: boolean) => {
     await withTestSetup(async () => {
       await docRef.firestore.disableNetwork();
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      docRef.set({ val: FieldValue.serverTimestamp() });
+      setDoc(docRef, { val: serverTimestamp() });
       let snap = await accumulator.awaitLocalEvent();
       expect(snap.get('val', { serverTimestamps: 'estimate' })).to.not.be.null;
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      docRef.set({ val: FieldValue.increment(1) });
+      setDoc(docRef, { val: FieldValue.increment(1) });
       snap = await accumulator.awaitLocalEvent();
       expect(snap.get('val')).to.equal(1);
 

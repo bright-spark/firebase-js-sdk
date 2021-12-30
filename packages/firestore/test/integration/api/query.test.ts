@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
+
 import { expect } from 'chai';
 
 import { addEqualityMatcher } from '../../util/equality_matcher';
@@ -112,7 +112,7 @@ apiDescribe('Queries', (persistence: boolean) => {
       d: { k: 'd', sort: 2 }
     };
     return withTestCollection(persistence, testDocs, async collection => {
-      const storeEvent = new EventsAccumulator<firestore.QuerySnapshot>();
+      const storeEvent = new EventsAccumulator<QuerySnapshot>();
       collection
         .orderBy('sort', 'desc')
         .limitToLast(2)
@@ -148,7 +148,7 @@ apiDescribe('Queries', (persistence: boolean) => {
     };
     return withTestCollection(persistence, testDocs, async collection => {
       // Setup `limit` query
-      const storeLimitEvent = new EventsAccumulator<firestore.QuerySnapshot>();
+      const storeLimitEvent = new EventsAccumulator<QuerySnapshot>();
       let limitUnlisten = collection
         .orderBy('sort', 'asc')
         .limit(2)
@@ -156,7 +156,7 @@ apiDescribe('Queries', (persistence: boolean) => {
 
       // Setup mirroring `limitToLast` query
       const storeLimitToLastEvent =
-        new EventsAccumulator<firestore.QuerySnapshot>();
+        new EventsAccumulator<QuerySnapshot>();
       let limitToLastUnlisten = collection
         .orderBy('sort', 'desc')
         .limitToLast(2)
@@ -205,7 +205,7 @@ apiDescribe('Queries', (persistence: boolean) => {
 
       // Unlisten to limitToLast, update a doc, then relisten limitToLast.
       limitToLastUnlisten();
-      await collection.doc('a').update({ k: 'a', sort: -2 });
+      await doc(collection, 'a').update({ k: 'a', sort: -2 });
       limitToLastUnlisten = collection
         .orderBy('sort', 'desc')
         .limitToLast(2)
@@ -301,7 +301,7 @@ apiDescribe('Queries', (persistence: boolean) => {
   it('will not get metadata only updates', () => {
     const testDocs = { a: { v: 'a' }, b: { v: 'b' } };
     return withTestCollection(persistence, testDocs, coll => {
-      const storeEvent = new EventsAccumulator<firestore.QuerySnapshot>();
+      const storeEvent = new EventsAccumulator<QuerySnapshot>();
       let unlisten: (() => void) | null = null;
       return Promise.all([
         coll.doc('a').set({ v: 'a' }),
@@ -341,7 +341,7 @@ apiDescribe('Queries', (persistence: boolean) => {
       'c': { 'order': 3 }
     };
     await withTestCollection(persistence, testDocs, async coll => {
-      const accumulator = new EventsAccumulator<firestore.QuerySnapshot>();
+      const accumulator = new EventsAccumulator<QuerySnapshot>();
       const unlisten = coll.orderBy('order').onSnapshot(accumulator.storeEvent);
       await accumulator
         .awaitEvent()
@@ -374,8 +374,8 @@ apiDescribe('Queries', (persistence: boolean) => {
   it('can listen for the same query with different options', () => {
     const testDocs = { a: { v: 'a' }, b: { v: 'b' } };
     return withTestCollection(persistence, testDocs, coll => {
-      const storeEvent = new EventsAccumulator<firestore.QuerySnapshot>();
-      const storeEventFull = new EventsAccumulator<firestore.QuerySnapshot>();
+      const storeEvent = new EventsAccumulator<QuerySnapshot>();
+      const storeEventFull = new EventsAccumulator<QuerySnapshot>();
       const unlisten1 = coll.onSnapshot(storeEvent.storeEvent);
       const unlisten2 = coll.onSnapshot(
         { includeMetadataChanges: true },
@@ -515,7 +515,7 @@ apiDescribe('Queries', (persistence: boolean) => {
     };
     return withTestCollection(persistence, testDocs, coll => {
       const query = coll.where('key', '<', '4');
-      const accum = new EventsAccumulator<firestore.QuerySnapshot>();
+      const accum = new EventsAccumulator<QuerySnapshot>();
       let unlisten2: () => void;
       const unlisten1 = query.onSnapshot(result => {
         expect(toDataArray(result)).to.deep.equal([
@@ -556,7 +556,7 @@ apiDescribe('Queries', (persistence: boolean) => {
       foo: { a: 'b', v: 2 }
     };
     return withTestCollection(persistence, initialDoc, async coll => {
-      const accum = new EventsAccumulator<firestore.QuerySnapshot>();
+      const accum = new EventsAccumulator<QuerySnapshot>();
       const unlisten = coll.onSnapshot(
         { includeMetadataChanges: true },
         accum.storeEvent
@@ -689,7 +689,7 @@ apiDescribe('Queries', (persistence: boolean) => {
   it('trigger with isFromCache=true when offline', () => {
     return withTestCollection(persistence, { a: { foo: 1 } }, coll => {
       const firestore = coll.firestore;
-      const accum = new EventsAccumulator<firestore.QuerySnapshot>();
+      const accum = new EventsAccumulator<QuerySnapshot>();
       const unregister = coll.onSnapshot(
         { includeMetadataChanges: true },
         accum.storeEvent
@@ -1032,7 +1032,7 @@ apiDescribe('Queries', (persistence: boolean) => {
     await withTestDb(persistence, async db => {
       // Use .doc() to get a random collection group name to use but ensure it starts with 'b' for
       // predictable ordering.
-      const collectionGroup = 'b' + db.collection('foo').doc().id;
+      const collectionGroup = 'b' + collection(db,'foo').doc().id;
 
       const docPaths = [
         `abc/123/${collectionGroup}/cg-doc1`,
@@ -1049,7 +1049,7 @@ apiDescribe('Queries', (persistence: boolean) => {
       ];
       const batch = db.batch();
       for (const docPath of docPaths) {
-        batch.set(db.doc(docPath), { x: 1 });
+        batch.set(doc(db, (docPath), { x: 1 });
       }
       await batch.commit();
 
@@ -1068,7 +1068,7 @@ apiDescribe('Queries', (persistence: boolean) => {
     await withTestDb(persistence, async db => {
       // Use .doc() to get a random collection group name to use but ensure it starts with 'b' for
       // predictable ordering.
-      const collectionGroup = 'b' + db.collection('foo').doc().id;
+      const collectionGroup = 'b' + collection(db,'foo').doc().id;
 
       const docPaths = [
         `a/a/${collectionGroup}/cg-doc1`,
@@ -1081,7 +1081,7 @@ apiDescribe('Queries', (persistence: boolean) => {
       ];
       const batch = db.batch();
       for (const docPath of docPaths) {
-        batch.set(db.doc(docPath), { x: 1 });
+        batch.set(doc(db, (docPath), { x: 1 });
       }
       await batch.commit();
 
@@ -1111,7 +1111,7 @@ apiDescribe('Queries', (persistence: boolean) => {
     await withTestDb(persistence, async db => {
       // Use .doc() to get a random collection group name to use but ensure it starts with 'b' for
       // predictable ordering.
-      const collectionGroup = 'b' + db.collection('foo').doc().id;
+      const collectionGroup = 'b' + collection(db,'foo').doc().id;
 
       const docPaths = [
         `a/a/${collectionGroup}/cg-doc1`,
@@ -1124,7 +1124,7 @@ apiDescribe('Queries', (persistence: boolean) => {
       ];
       const batch = db.batch();
       for (const docPath of docPaths) {
-        batch.set(db.doc(docPath), { x: 1 });
+        batch.set(doc(db, (docPath), { x: 1 });
       }
       await batch.commit();
 

@@ -290,7 +290,7 @@
 
 ### Patch Changes
 
-- [`9533688b1`](https://github.com/firebase/firebase-js-sdk/commit/9533688b1e39e58a550ec0527a0363270d73c5b5) [#4347](https://github.com/firebase/firebase-js-sdk/pull/4347) (fixes [#1392](https://github.com/firebase/firebase-js-sdk/issues/1392)) - handle `ignoreUndefinedProperties` in `set({ merge: true })`. Previously this would behave as if the undefined value were `FieldValue.delete()`, which wasn't intended.
+- [`9533688b1`](https://github.com/firebase/firebase-js-sdk/commit/9533688b1e39e58a550ec0527a0363270d73c5b5) [#4347](https://github.com/firebase/firebase-js-sdk/pull/4347) (fixes [#1392](https://github.com/firebase/firebase-js-sdk/issues/1392)) - handle `ignoreUndefinedProperties` in `set({ merge: true })`. Previously this would behave as if the undefined value were `deleteField()`, which wasn't intended.
 
 ## 2.1.4
 
@@ -483,7 +483,7 @@
 
 ### Patch Changes
 
-- [`61b4cd31b`](https://github.com/firebase/firebase-js-sdk/commit/61b4cd31b961c90354be38b18af5fbea9da8d5a3) [#3464](https://github.com/firebase/firebase-js-sdk/pull/3464) (fixes [#3354](https://github.com/firebase/firebase-js-sdk/issues/3354)) - feat: Added `merge` option to `firestore.settings()`, which merges the provided settings with
+- [`61b4cd31b`](https://github.com/firebase/firebase-js-sdk/commit/61b4cd31b961c90354be38b18af5fbea9da8d5a3) [#3464](https://github.com/firebase/firebase-js-sdk/pull/3464) (fixes [#3354](https://github.com/firebase/firebase-js-sdk/issues/3354)) - feat: Added `merge` option to `Settings()`, which merges the provided settings with
   settings from a previous call. This allows adding settings on top of the settings that were applied
   by `@firebase/testing`.
 - Updated dependencies [[`61b4cd31b`](https://github.com/firebase/firebase-js-sdk/commit/61b4cd31b961c90354be38b18af5fbea9da8d5a3)]:
@@ -719,7 +719,7 @@
 ## 1.4.4
 
 - [fixed] Fixed an internal assertion that was triggered when an update
-  with a `FieldValue.serverTimestamp()` and an update with a
+  with a `serverTimestamp()` and an update with a
   `FieldValue.increment()` were pending for the same document.
 
 ## 1.4.0
@@ -792,7 +792,7 @@
   Timestamp fields that read from a `DocumentSnapshot` are now returned as
   `Timestamp` objects instead of `Date` objects. This is a breaking change;
   developers must update any code that expects to receive a `Date` object. See
-  https://firebase.google.com/docs/reference/js/firebase.firestore.Settings#~timestampsInSnapshots
+  https://firebase.google.com/docs/reference/js/firebase.Settings#~timestampsInSnapshots
   for more details.
 - [fixed] Fixed a crash that could happen when the app is shut down after
   a write has been sent to the server but before it has been received on
@@ -817,7 +817,7 @@
   enabled, and the SDK will attempt to periodically clean up older, unused
   documents once the on-disk cache passes a threshold size (default: 40 MB).
   This threshold can be configured by changing the setting `cacheSizeBytes` in
-  the settings passed to `Firestore.settings()`. It must be set to a minimum of
+  the settings passed to `Settings()`. It must be set to a minimum of
   1 MB. The garbage collection process can be disabled entirely by setting
   `cacheSizeBytes` to `CACHE_SIZE_UNLIMITED`.
 
@@ -887,8 +887,8 @@
   been (firebase/firebase-ios-sdk#1548). Because some cache data is cleared,
   clients might use extra bandwidth the first time they launch with this
   version of the SDK.
-- [feature] Added `firebase.firestore.FieldValue.arrayUnion()` and
-  `firebase.firestore.FieldValue.arrayRemove()` to atomically add and remove
+- [feature] Added `firebase.firestore.arrayUnion()` and
+  `firebase.firestore.arrayRemove(docRef, ()` to atomically add and remove
   elements from an array field in a document.
 - [feature] Added `'array-contains'` query operator for use with `.where()` to
   find documents where an array field contains a specific element.
@@ -994,7 +994,7 @@
 
 ## v0.1.2
 
-- [changed] We now support `FieldValue.delete()` sentinels in `set()` calls
+- [changed] We now support `deleteField()` sentinels in `set()` calls
   with `{merge:true}`.
 - [fixed] Fixed validation of nested arrays to allow indirect nesting
 

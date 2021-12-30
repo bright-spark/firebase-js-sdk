@@ -125,7 +125,7 @@ describe('Mutation', () => {
       foo: { bar: 'bar-value', baz: 'baz-value' }
     });
     const patch = patchMutation('collection/key', {
-      'foo.bar': FieldValue.delete()
+      'foo.bar': deleteField()
     });
 
     mutationApplyToLocalView(patch, document, timestamp);
@@ -166,7 +166,7 @@ describe('Mutation', () => {
 
     const document = doc('collection/key', 0, docData);
     const transform = patchMutation('collection/key', {
-      'foo.bar': FieldValue.serverTimestamp()
+      'foo.bar': serverTimestamp()
     });
 
     mutationApplyToLocalView(transform, document, timestamp);
@@ -187,8 +187,8 @@ describe('Mutation', () => {
   // test once we have integration tests.
   it('can create arrayUnion() transform.', () => {
     const transform = patchMutation('collection/key', {
-      foo: FieldValue.arrayUnion('tag'),
-      'bar.baz': FieldValue.arrayUnion(true, { nested: { a: [1, 2] } })
+      foo: arrayUnion('tag'),
+      'bar.baz': arrayUnion(true, { nested: { a: [1, 2] } })
     });
     expect(transform.fieldTransforms).to.have.lengthOf(2);
 
@@ -213,7 +213,7 @@ describe('Mutation', () => {
   // test once we have integration tests.
   it('can create arrayRemove() transform.', () => {
     const transform = patchMutation('collection/key', {
-      foo: FieldValue.arrayRemove('tag')
+      foo: arrayRemove(docRef, ('tag')
     });
     expect(transform.fieldTransforms).to.have.lengthOf(1);
 
@@ -226,28 +226,28 @@ describe('Mutation', () => {
 
   it('can apply local arrayUnion transform to missing field', () => {
     const baseDoc = {};
-    const transform = { missing: FieldValue.arrayUnion(1, 2) };
+    const transform = { missing: arrayUnion(1, 2) };
     const expected = { missing: [1, 2] };
     verifyTransform(baseDoc, transform, expected);
   });
 
   it('can apply local arrayUnion transform to non-array field', () => {
     const baseDoc = { 'non-array': 42 };
-    const transform = { 'non-array': FieldValue.arrayUnion(1, 2) };
+    const transform = { 'non-array': arrayUnion(1, 2) };
     const expected = { 'non-array': [1, 2] };
     verifyTransform(baseDoc, transform, expected);
   });
 
   it('can apply local arrayUnion transform with non-existing elements', () => {
     const baseDoc = { array: [1, 3] };
-    const transform = { array: FieldValue.arrayUnion(2, 4) };
+    const transform = { array: arrayUnion(2, 4) };
     const expected = { array: [1, 3, 2, 4] };
     verifyTransform(baseDoc, transform, expected);
   });
 
   it('can apply local arrayUnion transform with existing elements', () => {
     const baseDoc = { array: [1, 3] };
-    const transform = { array: FieldValue.arrayUnion(1, 3) };
+    const transform = { array: arrayUnion(1, 3) };
     const expected = { array: [1, 3] };
     verifyTransform(baseDoc, transform, expected);
   });
@@ -255,7 +255,7 @@ describe('Mutation', () => {
   it('can apply local arrayUnion transform with duplicate existing elements', () => {
     // Duplicate entries in your existing array should be preserved.
     const baseDoc = { array: [1, 2, 2, 3] };
-    const transform = { array: FieldValue.arrayUnion(2) };
+    const transform = { array: arrayUnion(2) };
     const expected = { array: [1, 2, 2, 3] };
     verifyTransform(baseDoc, transform, expected);
   });
@@ -263,7 +263,7 @@ describe('Mutation', () => {
   it('can apply local arrayUnion transform with duplicate union elements', () => {
     // Duplicate entries in your union array should only be added once.
     const baseDoc = { array: [1, 3] };
-    const transform = { array: FieldValue.arrayUnion(2, 2) };
+    const transform = { array: arrayUnion(2, 2) };
     const expected = { array: [1, 3, 2] };
     verifyTransform(baseDoc, transform, expected);
   });
@@ -271,7 +271,7 @@ describe('Mutation', () => {
   it('can apply local arrayUnion transform with non-primitive elements', () => {
     // Union nested object values (one existing, one not).
     const baseDoc = { array: [1, { a: 'b' }] };
-    const transform = { array: FieldValue.arrayUnion({ a: 'b' }, { c: 'd' }) };
+    const transform = { array: arrayUnion({ a: 'b' }, { c: 'd' }) };
     const expected = { array: [1, { a: 'b' }, { c: 'd' }] };
     verifyTransform(baseDoc, transform, expected);
   });
@@ -279,35 +279,35 @@ describe('Mutation', () => {
   it('can apply local arrayUnion transform with partially-overlapping elements', () => {
     // Union objects that partially overlap an existing object.
     const baseDoc = { array: [1, { a: 'b', c: 'd' }] };
-    const transform = { array: FieldValue.arrayUnion({ a: 'b' }, { c: 'd' }) };
+    const transform = { array: arrayUnion({ a: 'b' }, { c: 'd' }) };
     const expected = { array: [1, { a: 'b', c: 'd' }, { a: 'b' }, { c: 'd' }] };
     verifyTransform(baseDoc, transform, expected);
   });
 
   it('can apply local arrayRemove transform to missing field', () => {
     const baseDoc = {};
-    const transform = { missing: FieldValue.arrayRemove(1, 2) };
+    const transform = { missing: arrayRemove(docRef, (1, 2) };
     const expected = { missing: [] };
     verifyTransform(baseDoc, transform, expected);
   });
 
   it('can apply local arrayRemove transform to non-array field', () => {
     const baseDoc = { 'non-array': 42 };
-    const transform = { 'non-array': FieldValue.arrayRemove(1, 2) };
+    const transform = { 'non-array': arrayRemove(docRef, (1, 2) };
     const expected = { 'non-array': [] };
     verifyTransform(baseDoc, transform, expected);
   });
 
   it('can apply local arrayRemove transform with non-existing elements', () => {
     const baseDoc = { array: [1, 3] };
-    const transform = { array: FieldValue.arrayRemove(2, 4) };
+    const transform = { array: arrayRemove(docRef, (2, 4) };
     const expected = { array: [1, 3] };
     verifyTransform(baseDoc, transform, expected);
   });
 
   it('can apply local arrayRemove transform with existing elements', () => {
     const baseDoc = { array: [1, 2, 3, 4] };
-    const transform = { array: FieldValue.arrayRemove(1, 3) };
+    const transform = { array: arrayRemove(docRef, (1, 3) };
     const expected = { array: [2, 4] };
     verifyTransform(baseDoc, transform, expected);
   });
@@ -316,7 +316,7 @@ describe('Mutation', () => {
     // Remove nested object values (one existing, one not).
     const baseDoc = { array: [1, { a: 'b' }] };
     const transform = {
-      array: FieldValue.arrayRemove({ a: 'b' }, { c: 'd' })
+      array: arrayRemove(docRef, ({ a: 'b' }, { c: 'd' })
     };
     const expected = { array: [1] };
     verifyTransform(baseDoc, transform, expected);
@@ -350,7 +350,7 @@ describe('Mutation', () => {
 
     const document = doc('collection/key', 0, docData);
     const transform = patchMutation('collection/key', {
-      'foo.bar': FieldValue.serverTimestamp()
+      'foo.bar': serverTimestamp()
     });
 
     const mutationResult = new MutationResult(version(1), [
@@ -375,8 +375,8 @@ describe('Mutation', () => {
     const docData = { array1: [1, 2], array2: ['a', 'b'] };
     const document = doc('collection/key', 0, docData);
     const transform = setMutation('collection/key', {
-      array1: FieldValue.arrayUnion(2, 3),
-      array2: FieldValue.arrayRemove('a', 'c')
+      array1: arrayUnion(2, 3),
+      array2: arrayRemove(docRef, ('a', 'c')
     });
 
     // Server just sends null transform results for array operations.
@@ -566,8 +566,8 @@ describe('Mutation', () => {
     const baseDoc = doc('collection/key', 0, allValues);
 
     const allTransforms = {
-      time: FieldValue.serverTimestamp(),
-      nested: { time: FieldValue.serverTimestamp() }
+      time: serverTimestamp(),
+      nested: { time: serverTimestamp() }
     };
 
     // Server timestamps are idempotent and don't have base values.

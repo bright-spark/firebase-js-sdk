@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
+
 import { expect } from 'chai';
 
 import { addEqualityMatcher } from '../../util/equality_matcher';
@@ -31,22 +31,22 @@ apiDescribe('Firestore', (persistence: boolean) => {
   addEqualityMatcher();
 
   async function expectRoundtrip(
-    db: firestore.FirebaseFirestore,
+    db: Firestore,
     data: {},
     validateSnapshots = true,
     expectedData?: {}
-  ): Promise<firestore.DocumentSnapshot> {
+  ): Promise<DocumentSnapshot> {
     expectedData = expectedData ?? data;
 
-    const collection = db.collection(db.collection('a').doc().id);
-    const doc = collection.doc();
+    const collection = collection(db,collection(db,'a').doc().id);
+    const doc = doc(collection, );
 
-    await doc.set(data);
-    let docSnapshot = await doc.get();
+    await setDoc(doc,data);
+    let docSnapshot = await getDoc(doc);
     expect(docSnapshot.data()).to.deep.equal(expectedData);
 
     await doc.update(data);
-    docSnapshot = await doc.get();
+    docSnapshot = await getDoc(doc);
     expect(docSnapshot.data()).to.deep.equal(expectedData);
 
     // Validate that the transaction API returns the same types
@@ -61,7 +61,7 @@ apiDescribe('Firestore', (persistence: boolean) => {
       expect(docSnapshot.data()).to.deep.equal(expectedData);
 
       const eventsAccumulator =
-        new EventsAccumulator<firestore.QuerySnapshot>();
+        new EventsAccumulator<QuerySnapshot>();
       const unlisten = collection.onSnapshot(eventsAccumulator.storeEvent);
       querySnapshot = await eventsAccumulator.awaitEvent();
       docSnapshot = querySnapshot.docs[0];

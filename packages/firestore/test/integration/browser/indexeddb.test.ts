@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
 import { expect } from 'chai';
 
 import { isPersistenceAvailable, withTestDb } from '../util/helpers';
@@ -51,8 +50,8 @@ describe('where persistence is unsupported, enablePersistence', () => {
         });
 
       // Do the set immediately without waiting on the promise.
-      const doc = db.collection('test-collection').doc();
-      return doc.set({ foo: 'bar' }).then(() => persistenceFailedPromise);
+      const doc = collection(db, 'test-collection').doc();
+      return setDoc(doc, { foo: 'bar' }).then(() => persistenceFailedPromise);
     });
   });
 });

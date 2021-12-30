@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
 import { expect } from 'chai';
 
 import { EventsAccumulator } from './util/events_accumulator';
@@ -32,7 +31,7 @@ before(
     this.timeout(PRIMING_TIMEOUT_MS);
 
     return withTestDoc(/*persistence=*/ false, async doc => {
-      const accumulator = new EventsAccumulator<firestore.DocumentSnapshot>();
+      const accumulator = new EventsAccumulator<DocumentSnapshot>();
       const unsubscribe = doc.onSnapshot(accumulator.storeEvent);
 
       // Wait for watch to initialize and deliver first event.

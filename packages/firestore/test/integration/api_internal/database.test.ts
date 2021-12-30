@@ -55,7 +55,7 @@ apiDescribe('Database (with internal API)', (persistence: boolean) => {
         // Prevent pending writes receiving acknowledgement.
         await db.disableNetwork();
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        db.doc('abc/123').set({ foo: 'bar' });
+        doc(db, ('abc/123').set({ foo: 'bar' });
         const awaitPendingWrite = db.waitForPendingWrites();
 
         mockCredentialsProvider.triggerUserChange(new User('user_1'));
@@ -69,7 +69,7 @@ apiDescribe('Database (with internal API)', (persistence: boolean) => {
 
   it('app delete leads to instance termination', async () => {
     await withTestDoc(persistence, async docRef => {
-      await docRef.set({ foo: 'bar' });
+      await setDoc(docRef, { foo: 'bar' });
       const app = docRef.firestore.app;
       await app.delete();
 

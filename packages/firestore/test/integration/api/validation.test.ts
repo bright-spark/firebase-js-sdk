@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
+
 import { expect } from 'chai';
 
 import { Deferred } from '../../util/promise';
@@ -39,17 +39,17 @@ interface ValidationIt {
   (
     persistence: boolean,
     message: string,
-    testFunction: (db: firestore.FirebaseFirestore) => void | Promise<any>
+    testFunction: (db: Firestore) => void | Promise<any>
   ): void;
   skip: (
     persistence: boolean,
     message: string,
-    testFunction: (db: firestore.FirebaseFirestore) => void | Promise<any>
+    testFunction: (db: Firestore) => void | Promise<any>
   ) => void;
   only: (
     persistence: boolean,
     message: string,
-    testFunction: (db: firestore.FirebaseFirestore) => void | Promise<any>
+    testFunction: (db: Firestore) => void | Promise<any>
   ) => void;
 }
 
@@ -59,7 +59,7 @@ const validationIt: ValidationIt = Object.assign(
   (
     persistence: boolean,
     message: string,
-    testFunction: (db: firestore.FirebaseFirestore) => void | Promise<any>
+    testFunction: (db: Firestore) => void | Promise<any>
   ) => {
     it(message, () => {
       return withTestDb(persistence, async db => {
@@ -74,7 +74,7 @@ const validationIt: ValidationIt = Object.assign(
     skip(
       persistence: boolean,
       message: string,
-      _: (db: firestore.FirebaseFirestore) => void | Promise<any>
+      _: (db: Firestore) => void | Promise<any>
     ): void {
       // eslint-disable-next-line no-restricted-properties
       it.skip(message, () => {});
@@ -82,7 +82,7 @@ const validationIt: ValidationIt = Object.assign(
     only(
       persistence: boolean,
       message: string,
-      testFunction: (db: firestore.FirebaseFirestore) => void | Promise<any>
+      testFunction: (db: Firestore) => void | Promise<any>
     ): void {
       // eslint-disable-next-line no-restricted-properties
       it.only(message, () => {
@@ -116,7 +116,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'disallows changing settings after use',
       async db => {
-        await db.doc('foo/bar').set({});
+        await doc(db, ('foo/bar').set({});
         expect(() =>
           db.settings({ host: 'something-else.example.com' })
         ).to.throw(
@@ -153,7 +153,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
         const errorMsg =
           'Firestore has already been started and its settings can no longer be changed.';
 
-        await db.doc('foo/bar').set({});
+        await doc(db, ('foo/bar').set({});
         expect(() => db.useEmulator('localhost', 9000)).to.throw(errorMsg);
       }
     );
@@ -201,7 +201,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
         // Calling `enablePersistence()` itself counts as use, so we should only
         // need this method when persistence is not enabled.
         if (!persistence) {
-          db.doc('foo/bar');
+          doc(db, ('foo/bar');
         }
         expect(() => db.enablePersistence()).to.throw(
           'Firestore has already been started and persistence can no ' +
@@ -229,8 +229,8 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
   describe('Collection paths', () => {
     validationIt(persistence, 'must be non-empty strings', db => {
-      const baseDocRef = db.doc('foo/bar');
-      expect(() => db.collection('')).to.throw(
+      const baseDocRef = doc(db, ('foo/bar');
+      expect(() => collection(db,'')).to.throw(
         'Function Firestore.collection() cannot be called with an empty path.'
       );
       expect(() => baseDocRef.collection('')).to.throw(
@@ -240,7 +240,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
     });
 
     validationIt(persistence, 'must be odd-length', db => {
-      const baseDocRef = db.doc('foo/bar');
+      const baseDocRef = doc(db, ('foo/bar');
       const badAbsolutePaths = ['foo/bar', 'foo/bar/baz/quu'];
       const badRelativePaths = ['/', 'baz/quu'];
       const badPathLengths = [2, 4];
@@ -250,7 +250,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
           'Invalid collection reference. Collection references ' +
           'must have an odd number of segments, but ' +
           `${badAbsolutePaths[i]} has ${badPathLengths[i]}`;
-        expect(() => db.collection(badAbsolutePaths[i])).to.throw(error);
+        expect(() => collection(db,badAbsolutePaths[i])).to.throw(error);
         expect(() => baseDocRef.collection(badRelativePaths[i])).to.throw(
           error
         );
@@ -259,18 +259,18 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
     validationIt(persistence, 'must not have empty segments', db => {
       // NOTE: leading / trailing slashes are okay.
-      db.collection('/foo/');
-      db.collection('/foo');
-      db.collection('foo/');
+      collection(db,'/foo/');
+      collection(db,'/foo');
+      collection(db,'foo/');
 
       const badPaths = ['foo//bar//baz', '//foo', 'foo//'];
-      const collection = db.collection('test-collection');
-      const doc = collection.doc('test-document');
+      const collection = collection(db,'test-collection');
+      const doc = doc(collection, 'test-document');
       for (const path of badPaths) {
         const reason = `Invalid segment (${path}). Paths must not contain // in them.`;
-        expect(() => db.collection(path)).to.throw(reason);
-        expect(() => db.doc(path)).to.throw(reason);
-        expect(() => collection.doc(path)).to.throw(reason);
+        expect(() => collection(db,path)).to.throw(reason);
+        expect(() => doc(db, (path)).to.throw(reason);
+        expect(() => doc(collection, path)).to.throw(reason);
         expect(() => doc.collection(path)).to.throw(reason);
       }
     });
@@ -278,9 +278,9 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
   describe('Document paths', () => {
     validationIt(persistence, 'must be strings', db => {
-      const baseCollectionRef = db.collection('foo');
+      const baseCollectionRef = collection(db,'foo');
 
-      expect(() => db.doc('')).to.throw(
+      expect(() => doc(db, ('')).to.throw(
         'Function Firestore.doc() cannot be called with an empty path.'
       );
       expect(() => baseCollectionRef.doc('')).to.throw(
@@ -290,7 +290,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
     });
 
     validationIt(persistence, 'must be even-length', db => {
-      const baseCollectionRef = db.collection('foo');
+      const baseCollectionRef = collection(db,'foo');
       const badAbsolutePaths = ['foo', 'foo/bar/baz'];
       const badRelativePaths = ['/', 'bar/baz'];
       const badPathLengths = [1, 3];
@@ -300,7 +300,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
           'Invalid document reference. Document references ' +
           'must have an even number of segments, but ' +
           `${badAbsolutePaths[i]} has ${badPathLengths[i]}`;
-        expect(() => db.doc(badAbsolutePaths[i])).to.throw(error);
+        expect(() => doc(db, (badAbsolutePaths[i])).to.throw(error);
         expect(() => baseCollectionRef.doc(badRelativePaths[i])).to.throw(
           error
         );
@@ -309,13 +309,13 @@ apiDescribe('Validation:', (persistence: boolean) => {
   });
 
   validationIt(persistence, 'Merge options are validated', db => {
-    const docRef = db.collection('test').doc();
+    const docRef = collection(db,'test').doc();
 
-    expect(() => docRef.set({}, { merge: true, mergeFields: [] })).to.throw(
+    expect(() => setDoc(docRef, {}, { merge: true, mergeFields: [] })).to.throw(
       'Invalid options passed to function DocumentReference.set(): You cannot specify both ' +
         '"merge" and "mergeFields".'
     );
-    expect(() => docRef.set({}, { merge: false, mergeFields: [] })).to.throw(
+    expect(() => setDoc(docRef, {}, { merge: false, mergeFields: [] })).to.throw(
       'Invalid options passed to function DocumentReference.set(): You cannot specify both ' +
         '"merge" and "mergeFields".'
     );
@@ -323,7 +323,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
   describe('Writes', () => {
     validationIt(persistence, 'must be objects.', db => {
-      // PORTING NOTE: The error for firebase.firestore.FieldValue.delete()
+      // PORTING NOTE: The error for firebase.firestore.deleteField()
       // is different for minified builds, so omit testing it specifically.
       const badData = [
         42,
@@ -387,8 +387,8 @@ apiDescribe('Validation:', (persistence: boolean) => {
       db => {
         return expectWriteToFail(
           db,
-          { 'array': [FieldValue.serverTimestamp()] },
-          'FieldValue.serverTimestamp() is not currently supported inside arrays'
+          { 'array': [serverTimestamp()] },
+          'serverTimestamp() is not currently supported inside arrays'
         );
       }
     );
@@ -408,8 +408,8 @@ apiDescribe('Validation:', (persistence: boolean) => {
     validationIt(persistence, 'may contain indirectly nested arrays.', db => {
       const data = { 'nested-array': [1, { foo: [2] }] };
 
-      const ref = db.collection('foo').doc();
-      const ref2 = db.collection('foo').doc();
+      const ref = collection(db,'foo').doc();
+      const ref2 = collection(db,'foo').doc();
 
       return ref
         .set(data)
@@ -505,12 +505,12 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
     validationIt(
       persistence,
-      'via set() must not contain FieldValue.delete()',
+      'via set() must not contain deleteField()',
       db => {
         return expectSetToFail(
           db,
-          { foo: FieldValue.delete() },
-          'FieldValue.delete() cannot be used with set() unless you pass ' +
+          { foo: deleteField() },
+          'deleteField() cannot be used with set() unless you pass ' +
             '{merge:true} (found in field foo)'
         );
       }
@@ -518,12 +518,12 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
     validationIt(
       persistence,
-      'via update() must not contain nested FieldValue.delete()',
+      'via update() must not contain nested deleteField()',
       db => {
         return expectUpdateToFail(
           db,
-          { foo: { bar: FieldValue.delete() } },
-          'FieldValue.delete() can only appear at the top level of your ' +
+          { foo: { bar: deleteField() } },
+          'deleteField() can only appear at the top level of your ' +
             'update data (found in field foo.bar)'
         );
       }
@@ -567,11 +567,11 @@ apiDescribe('Validation:', (persistence: boolean) => {
   );
 
   validationIt(persistence, 'Field paths must not have empty segments', db => {
-    const docRef = db.collection('test').doc();
+    const docRef = collection(db,'test').doc();
     return docRef
       .set({ test: 1 })
       .then(() => {
-        return docRef.get();
+        return getDoc(docRef, ();
       })
       .then(snapshot => {
         const badFieldPaths = ['', 'foo..baz', '.foo', 'foo.'];
@@ -590,11 +590,11 @@ apiDescribe('Validation:', (persistence: boolean) => {
     persistence,
     'Field paths must not have invalid segments',
     db => {
-      const docRef = db.collection('test').doc();
+      const docRef = collection(db,'test').doc();
       return docRef
         .set({ test: 1 })
         .then(() => {
-          return docRef.get();
+          return getDoc(docRef, ();
         })
         .then(snapshot => {
           const badFieldPaths = [
@@ -619,60 +619,60 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
   describe('Array transforms', () => {
     validationIt(persistence, 'fail in queries', db => {
-      const collection = db.collection('test');
+      const collection = collection(db,'test');
       expect(() =>
-        collection.where('test', '==', { test: FieldValue.arrayUnion(1) })
+        collection.where('test', '==', { test: arrayUnion(1) })
       ).to.throw(
         'Function Query.where() called with invalid data. ' +
-          'FieldValue.arrayUnion() can only be used with update() and set() ' +
+          'arrayUnion() can only be used with update() and set() ' +
           '(found in field test)'
       );
 
       expect(() =>
-        collection.where('test', '==', { test: FieldValue.arrayRemove(1) })
+        collection.where('test', '==', { test: arrayRemove(docRef, (1) })
       ).to.throw(
         'Function Query.where() called with invalid data. ' +
-          'FieldValue.arrayRemove() can only be used with update() and set() ' +
+          'arrayRemove(docRef, () can only be used with update() and set() ' +
           '(found in field test)'
       );
     });
 
     validationIt(persistence, 'reject invalid elements', db => {
-      const doc = db.collection('test').doc();
+      const doc = collection(db,'test').doc();
       expect(() =>
-        doc.set({ x: FieldValue.arrayUnion(1, new TestClass('foo')) })
+        setDoc(doc,{ x: arrayUnion(1, new TestClass('foo')) })
       ).to.throw(
-        'Function FieldValue.arrayUnion() called with invalid data. ' +
+        'Function arrayUnion() called with invalid data. ' +
           'Unsupported field value: a custom TestClass object'
       );
 
       expect(() =>
-        doc.set({ x: FieldValue.arrayRemove(1, new TestClass('foo')) })
+        setDoc(doc,{ x: arrayRemove(docRef, (1, new TestClass('foo')) })
       ).to.throw(
-        'Function FieldValue.arrayRemove() called with invalid data. ' +
+        'Function arrayRemove(docRef, () called with invalid data. ' +
           'Unsupported field value: a custom TestClass object'
       );
 
-      expect(() => doc.set({ x: FieldValue.arrayRemove(undefined) })).to.throw(
-        'Function FieldValue.arrayRemove() called with invalid data. ' +
+      expect(() => setDoc(doc,{ x: arrayRemove(docRef, (undefined) })).to.throw(
+        'Function arrayRemove(docRef, () called with invalid data. ' +
           'Unsupported field value: undefined'
       );
     });
 
     validationIt(persistence, 'reject arrays', db => {
-      const doc = db.collection('test').doc();
+      const doc = collection(db,'test').doc();
       // This would result in a directly nested array which is not supported.
       expect(() =>
-        doc.set({ x: FieldValue.arrayUnion(1, ['nested']) })
+        setDoc(doc,{ x: arrayUnion(1, ['nested']) })
       ).to.throw(
-        'Function FieldValue.arrayUnion() called with invalid data. ' +
+        'Function arrayUnion() called with invalid data. ' +
           'Nested arrays are not supported'
       );
 
       expect(() =>
-        doc.set({ x: FieldValue.arrayRemove(1, ['nested']) })
+        setDoc(doc,{ x: arrayRemove(docRef, (1, ['nested']) })
       ).to.throw(
-        'Function FieldValue.arrayRemove() called with invalid data. ' +
+        'Function arrayRemove(docRef, () called with invalid data. ' +
           'Nested arrays are not supported'
       );
     });
@@ -680,7 +680,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
   describe('Numeric transforms', () => {
     validationIt(persistence, 'fail in queries', db => {
-      const collection = db.collection('test');
+      const collection = collection(db,'test');
       expect(() =>
         collection.where('test', '==', { test: FieldValue.increment(1) })
       ).to.throw(
@@ -693,7 +693,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
 
   describe('Queries', () => {
     validationIt(persistence, 'with non-positive limit fail', db => {
-      const collection = db.collection('test');
+      const collection = collection(db,'test');
       expect(() => collection.limit(0)).to.throw(
         `Function Query.limit() requires a positive number, but it was: 0.`
       );
@@ -732,7 +732,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
         return withTestCollection(
           persistence,
           /*docs=*/ {},
-          async (collection: firestore.CollectionReference) => {
+          async (collection: CollectionReference) => {
             await db.disableNetwork();
 
             const offlineDeferred = new Deferred<void>();
@@ -745,7 +745,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
               }
 
               expect(snapshot.docs).to.have.lengthOf(1);
-              const docSnap: firestore.DocumentSnapshot = snapshot.docs[0];
+              const docSnap: DocumentSnapshot = snapshot.docs[0];
 
               if (snapshot.metadata.hasPendingWrites) {
                 // Offline snapshot. Since the server timestamp is uncommitted,
@@ -768,9 +768,9 @@ apiDescribe('Validation:', (persistence: boolean) => {
               }
             });
 
-            const doc: firestore.DocumentReference = collection.doc();
+            const doc: DocumentReference = doc(collection, );
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            doc.set({ timestamp: FieldValue.serverTimestamp() });
+            setDoc(doc,{ timestamp: serverTimestamp() });
             await offlineDeferred.promise;
 
             await db.enableNetwork();
@@ -786,7 +786,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'must not have more components than order by.',
       db => {
-        const collection = db.collection('collection');
+        const collection = collection(db,'collection');
         const query = collection.orderBy('foo');
         const reason =
           'Too many arguments provided to Query.startAt(). The number of ' +
@@ -826,7 +826,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
     );
 
     validationIt(persistence, 'with different inequality fields fail', db => {
-      const collection = db.collection('test');
+      const collection = collection(db,'test');
       expect(() =>
         collection.where('x', '>=', 32).where('y', '<', 'cat')
       ).to.throw(
@@ -837,7 +837,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
     });
 
     validationIt(persistence, 'with more than one != query fail', db => {
-      const collection = db.collection('test');
+      const collection = collection(db,'test');
       expect(() =>
         collection.where('x', '!=', 32).where('x', '!=', 33)
       ).to.throw("Invalid query. You cannot use more than one '!=' filter.");
@@ -847,7 +847,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'with != and inequality queries on different fields fail',
       db => {
-        const collection = db.collection('test');
+        const collection = collection(db,'test');
         expect(() =>
           collection.where('y', '>', 32).where('x', '!=', 33)
         ).to.throw(
@@ -862,7 +862,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'with != and inequality queries on different fields fail',
       db => {
-        const collection = db.collection('test');
+        const collection = collection(db,'test');
         expect(() =>
           collection.where('y', '>', 32).where('x', 'not-in', [33])
         ).to.throw(
@@ -877,7 +877,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'with inequality different than first orderBy fail.',
       db => {
-        const collection = db.collection('test');
+        const collection = collection(db,'test');
         const reason =
           `Invalid query. You have a where filter with an ` +
           `inequality (<, <=, !=, not-in, >, or >=) on field 'x' and so you must also ` +
@@ -1135,12 +1135,12 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'enforce array requirements for disjunctive filters',
       db => {
-        expect(() => db.collection('test').where('foo', 'in', 2)).to.throw(
+        expect(() => collection(db,'test').where('foo', 'in', 2)).to.throw(
           "Invalid Query. A non-empty array is required for 'in' filters."
         );
 
         expect(() =>
-          db.collection('test').where('foo', 'array-contains-any', 2)
+          collection(db,'test').where('foo', 'array-contains-any', 2)
         ).to.throw(
           'Invalid Query. A non-empty array is required for ' +
             "'array-contains-any' filters."
@@ -1169,12 +1169,12 @@ apiDescribe('Validation:', (persistence: boolean) => {
             '10 elements in the value array.'
         );
 
-        expect(() => db.collection('test').where('foo', 'in', [])).to.throw(
+        expect(() => collection(db,'test').where('foo', 'in', [])).to.throw(
           "Invalid Query. A non-empty array is required for 'in' filters."
         );
 
         expect(() =>
-          db.collection('test').where('foo', 'array-contains-any', [])
+          collection(db,'test').where('foo', 'array-contains-any', [])
         ).to.throw(
           'Invalid Query. A non-empty array is required for ' +
             "'array-contains-any' filters."
@@ -1186,7 +1186,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'must not specify starting or ending point after orderBy',
       db => {
-        const collection = db.collection('collection');
+        const collection = collection(db,'collection');
         const query = collection.orderBy('foo');
         let reason =
           'Invalid query. You must not call startAt() or startAfter() before calling Query.orderBy().';
@@ -1204,7 +1204,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'must be non-empty strings or references when filtering by document ID',
       db => {
-        const collection = db.collection('test');
+        const collection = collection(db,'test');
         expect(() =>
           collection.where(FieldPath.documentId(), '>=', '')
         ).to.throw(
@@ -1252,7 +1252,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
       persistence,
       'using IN and document id must have proper document references in array',
       db => {
-        const collection = db.collection('test');
+        const collection = collection(db,'test');
 
         expect(() =>
           collection.where(FieldPath.documentId(), 'in', [collection.path])
@@ -1291,7 +1291,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
     );
 
     validationIt(persistence, 'cannot pass undefined as a field value', db => {
-      const collection = db.collection('test');
+      const collection = collection(db,'test');
       expect(() => collection.where('foo', '==', undefined)).to.throw(
         'Function Query.where() called with invalid data. Unsupported field value: undefined'
       );
@@ -1303,7 +1303,7 @@ apiDescribe('Validation:', (persistence: boolean) => {
 });
 
 function expectSetToFail(
-  db: firestore.FirebaseFirestore,
+  db: Firestore,
   data: any,
   reason: string
 ): Promise<void> {
@@ -1317,7 +1317,7 @@ function expectSetToFail(
 }
 
 function expectUpdateToFail(
-  db: firestore.FirebaseFirestore,
+  db: Firestore,
   data: any,
   reason: string
 ): Promise<void> {
@@ -1335,7 +1335,7 @@ function expectUpdateToFail(
  * with the expected reason.
  */
 function expectWriteToFail(
-  db: firestore.FirebaseFirestore,
+  db: Firestore,
   data: any,
   reason: string,
   includeSets?: boolean,
@@ -1355,19 +1355,19 @@ function expectWriteToFail(
     reason = `${reason} (found in document ${docPath})`;
   }
 
-  const docRef = db.doc(docPath);
+  const docRef = doc(db, (docPath);
   const error = (fnName: string): string =>
     `Function ${fnName}() called with invalid data. ${reason}`;
 
   if (includeSets) {
-    expect(() => docRef.set(data)).to.throw(error('DocumentReference.set'));
+    expect(() => setDoc(docRef, data)).to.throw(error('DocumentReference.set'));
     expect(() => docRef.firestore.batch().set(docRef, data)).to.throw(
       error('WriteBatch.set')
     );
   }
 
   if (includeUpdates) {
-    expect(() => docRef.update(data)).to.throw(
+    expect(() => updateDoc(docRef, data)).to.throw(
       error('DocumentReference.update')
     );
     expect(() => docRef.firestore.batch().update(docRef, data)).to.throw(
@@ -1393,7 +1393,7 @@ function expectWriteToFail(
  * they fail with the specified reason.
  */
 function expectFieldPathToFail(
-  snapshot: firestore.DocumentSnapshot,
+  snapshot: DocumentSnapshot,
   path: string,
   reason: string
 ): Promise<void> {
@@ -1407,7 +1407,7 @@ function expectFieldPathToFail(
     const db = snapshot.ref.firestore;
 
     // Query filter / order fields.
-    const coll = db.collection('test-collection');
+    const coll = collection(db,'test-collection');
     // <=, etc omitted for brevity since the code path is trivially
     // shared.
     expect(() => coll.where(path, '==', 1)).to.throw(

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
 import { expect } from 'chai';
 
 import { EventsAccumulator } from '../util/events_accumulator';
@@ -33,22 +32,22 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
   // Data written in tests via set().
   const setData = {
     a: 42,
-    when: FieldValue.serverTimestamp(),
-    deep: { when: FieldValue.serverTimestamp() }
+    when: serverTimestamp(),
+    deep: { when: serverTimestamp() }
   };
 
   // base and update data used for update() tests.
   const initialData = { a: 42 };
   const updateData = {
-    when: FieldValue.serverTimestamp(),
-    deep: { when: FieldValue.serverTimestamp() }
+    when: serverTimestamp(),
+    deep: { when: serverTimestamp() }
   };
 
   // A document reference to read and write to.
-  let docRef: firestore.DocumentReference;
+  let docRef: DocumentReference;
 
   // Accumulator used to capture events during the test.
-  let accumulator: EventsAccumulator<firestore.DocumentSnapshot>;
+  let accumulator: EventsAccumulator<DocumentSnapshot>;
 
   // Listener registration for a listener maintained during the course of the
   // test.
@@ -70,7 +69,7 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
   }
 
   /** Verifies a snapshot containing setData but with resolved server timestamps. */
-  function verifyTimestampsAreResolved(snap: firestore.DocumentSnapshot): void {
+  function verifyTimestampsAreResolved(snap: DocumentSnapshot): void {
     expect(snap.exists).to.equal(true);
     const when = snap.get('when');
     expect(when).to.be.an.instanceof(Timestamp);
@@ -86,15 +85,13 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
   }
 
   /** Verifies a snapshot containing setData but with null for the timestamps. */
-  function verifyTimestampsAreNull(snap: firestore.DocumentSnapshot): void {
+  function verifyTimestampsAreNull(snap: DocumentSnapshot): void {
     expect(snap.exists).to.equal(true);
     expect(snap.data()).to.deep.equal(expectedDataWithTimestamp(null));
   }
 
   /** Verifies a snapshot containing setData but with local estimates for server timestamps. */
-  function verifyTimestampsAreEstimates(
-    snap: firestore.DocumentSnapshot
-  ): void {
+  function verifyTimestampsAreEstimates(snap: DocumentSnapshot): void {
     expect(snap.exists).to.equal(true);
     const when = snap.get('when', { serverTimestamps: 'estimate' });
     expect(when).to.be.an.instanceof(Timestamp);
@@ -113,7 +110,7 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
       // Set variables for use during test.
       docRef = doc;
 
-      accumulator = new EventsAccumulator<firestore.DocumentSnapshot>();
+      accumulator = new EventsAccumulator<DocumentSnapshot>();
       unsubscribe = docRef.onSnapshot(
         { includeMetadataChanges: true },
         accumulator.storeEvent
@@ -146,7 +143,7 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
   it('work via update()', () => {
     return withTestSetup(() => {
       return writeInitialData()
-        .then(() => docRef.update(updateData))
+        .then(() => updateDoc(docRef, updateData))
         .then(() => accumulator.awaitLocalEvent())
         .then(snapshot => verifyTimestampsAreNull(snapshot))
         .then(() => accumulator.awaitRemoteEvent())
@@ -182,7 +179,7 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
   it('can return estimated value', () => {
     return withTestSetup(() => {
       return writeInitialData()
-        .then(() => docRef.update(updateData))
+        .then(() => updateDoc(docRef, updateData))
         .then(() => accumulator.awaitLocalEvent())
         .then(snapshot => verifyTimestampsAreEstimates(snapshot));
     });
@@ -193,7 +190,7 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
       return writeInitialData()
         .then(() =>
           // Change field 'a' from a number type to a server timestamp.
-          docRef.update('a', FieldValue.serverTimestamp())
+          updateDoc(docRef, 'a', serverTimestamp())
         )
         .then(() => accumulator.awaitLocalEvent())
         .then(snapshot => {
@@ -212,10 +209,10 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
         .then(() => {
           // We set up two consecutive writes with server timestamps.
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          docRef.update('a', FieldValue.serverTimestamp());
+          updateDoc(docRef, 'a', serverTimestamp());
           // include b=1 to ensure there's a change resulting in a new snapshot.
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          docRef.update('a', FieldValue.serverTimestamp(), 'b', 1);
+          updateDoc(docRef, 'a', serverTimestamp(), 'b', 1);
           return accumulator.awaitLocalEvents(2);
         })
         .then(snapshots => {
@@ -242,11 +239,11 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
         .then(() => {
           // We set up three consecutive writes.
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          docRef.update('a', FieldValue.serverTimestamp());
+          updateDoc(docRef, 'a', serverTimestamp());
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          docRef.update('a', 1337);
+          updateDoc(docRef, 'a', 1337);
           // eslint-disable-next-line @typescript-eslint/no-floating-promises
-          docRef.update('a', FieldValue.serverTimestamp());
+          updateDoc(docRef, 'a', serverTimestamp());
           return accumulator.awaitLocalEvents(3);
         })
         .then(snapshots => {
@@ -269,7 +266,7 @@ apiDescribe('Server Timestamps', (persistence: boolean) => {
 
   it('fail via update() on nonexistent document.', () => {
     return withTestSetup(() => {
-      return docRef.update(updateData).then(
+      return updateDoc(docRef, updateData).then(
         () => {
           return Promise.reject('Should not have succeeded!');
         },

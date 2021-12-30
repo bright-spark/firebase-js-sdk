@@ -666,8 +666,8 @@ export function serializerTest(
 
       it('ServerTimestamp transform', () => {
         const mutation = setMutation('baz/quux', {
-          a: FieldValue.serverTimestamp(),
-          'bar': FieldValue.serverTimestamp()
+          a: serverTimestamp(),
+          'bar': serverTimestamp()
         });
         const proto = {
           update: toMutationDocument(s, mutation.key, mutation.value),
@@ -679,7 +679,7 @@ export function serializerTest(
         verifyMutation(mutation, proto);
 
         const mutation2 = setMutation('baz/quux', {
-          a: FieldValue.serverTimestamp()
+          a: serverTimestamp()
         });
         const proto2 = {
           update: toMutationDocument(s, mutation2.key, mutation2.value),
@@ -720,8 +720,8 @@ export function serializerTest(
 
       it('Array transforms', () => {
         const mutation = patchMutation('docs/1', {
-          a: FieldValue.arrayUnion('a', 2),
-          'bar.baz': FieldValue.arrayRemove({ x: 1 })
+          a: arrayUnion('a', 2),
+          'bar.baz': arrayRemove(docRef, ({ x: 1 })
         });
         const proto = {
           update: toMutationDocument(s, mutation.key, mutation.data),
@@ -743,8 +743,8 @@ export function serializerTest(
         verifyMutation(mutation, proto);
 
         const mutation2 = setMutation('docs/1', {
-          a: FieldValue.arrayUnion('a', 2),
-          bar: FieldValue.arrayRemove({ x: 1 })
+          a: arrayUnion('a', 2),
+          bar: arrayRemove(docRef, ({ x: 1 })
         });
         const proto2 = {
           update: toMutationDocument(s, mutation2.key, mutation2.value),

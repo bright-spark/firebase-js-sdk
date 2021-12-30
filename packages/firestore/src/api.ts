@@ -133,6 +133,8 @@ export { FirestoreErrorCode, FirestoreError } from './util/error';
 
 export { AbstractUserDataWriter } from './lite-api/user_data_writer';
 
+export { FirestoreSettings as Settings } from './lite-api/settings';
+
 export {
   Primitive,
   NestedUpdateFields,

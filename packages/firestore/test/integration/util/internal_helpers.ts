@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
-
 import { Firestore } from '../../../compat/api/database';
 import {
   CredentialChangeListener,
@@ -38,7 +36,7 @@ import { key } from '../../util/helpers';
 import { withTestDbsSettings } from './helpers';
 import { DEFAULT_PROJECT_ID, DEFAULT_SETTINGS } from './settings';
 
-export function asyncQueue(db: firestore.FirebaseFirestore): AsyncQueueImpl {
+export function asyncQueue(db: Firestore): AsyncQueueImpl {
   return (db as Firestore)._delegate._queue as AsyncQueueImpl;
 }
 
@@ -93,7 +91,7 @@ export class MockAuthCredentialsProvider extends EmptyAuthCredentialsProvider {
 export function withMockCredentialProviderTestDb(
   persistence: boolean,
   fn: (
-    db: firestore.FirebaseFirestore,
+    db: Firestore,
     mockCredential: MockAuthCredentialsProvider
   ) => Promise<void>
 ): Promise<void> {
@@ -124,7 +122,7 @@ export function withMockCredentialProviderTestDb(
 function bundleWithTestDocsAndQueries(
   projectId: string = 'test-project'
 ): string {
-  const testDocs: { [key: string]: firestore.DocumentData } = {
+  const testDocs: { [key: string]: DocumentData } = {
     a: { k: { stringValue: 'a' }, bar: { integerValue: 1 } },
     b: { k: { stringValue: 'b' }, bar: { integerValue: 2 } }
   };

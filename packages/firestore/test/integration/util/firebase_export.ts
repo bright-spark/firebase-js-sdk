@@ -20,20 +20,8 @@
 // reference to the minified sources. If you change any exports in this file,
 // you need to also adjust "integration/firestore/firebase_export.ts".
 
-import firebase from '@firebase/app-compat';
-import { FirebaseApp } from '@firebase/app-types';
-import * as firestore from '@firebase/firestore-types';
-
-import { Blob } from '../../../compat/api/blob';
-import {
-  Firestore,
-  DocumentReference,
-  QueryDocumentSnapshot
-} from '../../../compat/api/database';
-import { FieldPath } from '../../../compat/api/field_path';
-import { FieldValue } from '../../../compat/api/field_value';
-import { GeoPoint } from '../../../compat/api/geo_point';
-import { Timestamp } from '../../../compat/api/timestamp';
+import { FirebaseApp, initializeApp } from '@firebase/app';
+import { Settings, Firestore, initializeFirestore } from '../../../src';
 
 // TODO(dimond): Right now we create a new app and Firestore instance for
 // every test and never clean them up. We may need to revisit.
@@ -46,15 +34,15 @@ let appCount = 0;
 export function newTestFirestore(
   projectId: string,
   nameOrApp?: string | FirebaseApp,
-  settings?: firestore.Settings
-): firestore.FirebaseFirestore {
+  settings?: Settings
+): Firestore {
   if (nameOrApp === undefined) {
     nameOrApp = 'test-app-' + appCount++;
   }
 
   const app =
     typeof nameOrApp === 'string'
-      ? firebase.initializeApp(
+      ? initializeApp(
           {
             apiKey: 'fake-api-key',
             projectId
@@ -63,21 +51,7 @@ export function newTestFirestore(
         )
       : nameOrApp;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const firestore = (firebase as any).firestore(app);
-  if (settings) {
-    firestore.settings(settings);
-  }
-  return firestore;
+  return initializeFirestore(app, settings || {});
 }
 
-export {
-  Firestore,
-  FieldValue,
-  FieldPath,
-  Timestamp,
-  Blob,
-  GeoPoint,
-  DocumentReference,
-  QueryDocumentSnapshot
-};
+export * from '../../../src';

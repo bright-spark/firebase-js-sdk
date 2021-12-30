@@ -27,9 +27,7 @@ import {
   withTestDocAndSettings
 } from '../util/helpers';
 import { DEFAULT_SETTINGS } from '../util/settings';
-
-const FieldPath = firebaseExport.FieldPath;
-const Timestamp = firebaseExport.Timestamp;
+import {FieldPath, getDoc, setDoc, updateDoc} from "../util/firebase_export";
 
 // Allow custom types for testing.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,7 +51,7 @@ apiDescribe('Nested Fields', (persistence: boolean) => {
     return withTestDoc(persistence, doc => {
       return doc
         .set(testData())
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.data()).to.deep.equal(testData());
         });
@@ -65,7 +63,7 @@ apiDescribe('Nested Fields', (persistence: boolean) => {
       const obj = testData();
       return doc
         .set(obj)
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.data()).to.deep.equal(obj);
           expect(docSnap.get('name')).to.deep.equal(obj.name);
@@ -84,7 +82,7 @@ apiDescribe('Nested Fields', (persistence: boolean) => {
       const obj = testData();
       return doc
         .set(obj)
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.data()).to.deep.equal(obj);
           expect(docSnap.get(new FieldPath('name'))).to.deep.equal(obj.name);
@@ -112,7 +110,7 @@ apiDescribe('Nested Fields', (persistence: boolean) => {
             'metadata.added': 200
           });
         })
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.data()).to.deep.equal({
             name: 'room 1',
@@ -140,7 +138,7 @@ apiDescribe('Nested Fields', (persistence: boolean) => {
             200
           );
         })
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.data()).to.deep.equal({
             name: 'room 1',
@@ -254,7 +252,7 @@ apiDescribe('Fields with special characters', (persistence: boolean) => {
     return withTestDoc(persistence, doc => {
       return doc
         .set(testData())
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.data()).to.deep.equal(testData());
         });
@@ -266,7 +264,7 @@ apiDescribe('Fields with special characters', (persistence: boolean) => {
       const obj = testData();
       return doc
         .set(obj)
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.data()).to.deep.equal(obj);
           expect(docSnap.get(new FieldPath('field.dot'))).to.deep.equal(
@@ -291,7 +289,7 @@ apiDescribe('Fields with special characters', (persistence: boolean) => {
             200
           );
         })
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.data()).to.deep.equal({
             field: 'field 1',
@@ -366,7 +364,7 @@ apiDescribe('Timestamp Fields in snapshots', (persistence: boolean) => {
     return withTestDoc(persistence, doc => {
       return doc
         .set(testDataWithTimestamps(timestamp))
-        .then(() => doc.get())
+        .then(() => getDoc(doc))
         .then(docSnap => {
           expect(docSnap.get('timestamp'))
             .to.be.an.instanceof(Timestamp)
@@ -392,27 +390,27 @@ apiDescribe('`undefined` properties', (persistence: boolean) => {
 
   it('are ignored in set()', () => {
     return withTestDocAndSettings(persistence, settings, async doc => {
-      await doc.set({ foo: 'foo', 'bar': undefined });
-      const docSnap = await doc.get();
+      await setDoc(doc,{ foo: 'foo', 'bar': undefined });
+      const docSnap = await getDoc(doc);
       expect(docSnap.data()).to.deep.equal({ foo: 'foo' });
     });
   });
 
   it('are ignored in set({ merge: true })', () => {
     return withTestDocAndSettings(persistence, settings, async doc => {
-      await doc.set({ foo: 'foo', bar: 'unchanged' });
-      await doc.set({ foo: 'foo', bar: undefined }, { merge: true });
-      const docSnap = await doc.get();
+      await setDoc(doc,{ foo: 'foo', bar: 'unchanged' });
+      await setDoc(doc,{ foo: 'foo', bar: undefined }, { merge: true });
+      const docSnap = await getDoc(doc);
       expect(docSnap.data()).to.deep.equal({ foo: 'foo', bar: 'unchanged' });
     });
   });
 
   it('are ignored in update()', () => {
     return withTestDocAndSettings(persistence, settings, async doc => {
-      await doc.set({});
+      await setDoc(doc,{});
       await doc.update({ a: { foo: 'foo', 'bar': undefined } });
-      await doc.update('b', { foo: 'foo', 'bar': undefined });
-      const docSnap = await doc.get();
+      await updateDoc(doc,'b', { foo: 'foo', 'bar': undefined });
+      const docSnap = await getDoc(doc);
       expect(docSnap.data()).to.deep.equal({
         a: { foo: 'foo' },
         b: { foo: 'foo' }

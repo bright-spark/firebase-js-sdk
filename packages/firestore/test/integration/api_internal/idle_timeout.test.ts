@@ -23,7 +23,7 @@ import { asyncQueue } from '../util/internal_helpers';
 apiDescribe('Idle Timeout', (persistence: boolean) => {
   it('can write document after idle timeout', () => {
     return withTestDb(persistence, db => {
-      const docRef = db.collection('test-collection').doc();
+      const docRef = collection(db, 'test-collection').doc();
       return docRef
         .set({ foo: 'bar' })
         .then(() => {
@@ -31,14 +31,14 @@ apiDescribe('Idle Timeout', (persistence: boolean) => {
             TimerId.WriteStreamIdle
           );
         })
-        .then(() => docRef.set({ foo: 'bar' }));
+        .then(() => setDoc(docRef, { foo: 'bar' }));
     });
   });
 
   it('can watch documents after idle timeout', () => {
     return withTestDb(persistence, db => {
       const awaitOnlineSnapshot = (): Promise<void> => {
-        const docRef = db.collection('test-collection').doc();
+        const docRef = collection(db, 'test-collection').doc();
         const deferred = new Deferred<void>();
         const unregister = docRef.onSnapshot(
           { includeMetadataChanges: true },

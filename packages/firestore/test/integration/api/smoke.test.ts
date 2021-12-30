@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import * as firestore from '@firebase/firestore-types';
 import { expect } from 'chai';
 
 import { EventsAccumulator } from '../util/events_accumulator';
@@ -44,7 +43,7 @@ apiDescribe('Smoke Test', (persistence: boolean) => {
         .then(() => {
           return ref.get();
         })
-        .then((doc: firestore.DocumentSnapshot) => {
+        .then((doc: DocumentSnapshot) => {
           expect(doc.data()).to.deep.equal(data);
         });
     });
@@ -60,7 +59,7 @@ apiDescribe('Smoke Test', (persistence: boolean) => {
           .then(() => {
             return ref1.get();
           })
-          .then((doc: firestore.DocumentSnapshot) => {
+          .then((doc: DocumentSnapshot) => {
             const recv = doc.data()!;
             expect(recv['message']).to.deep.equal(data.message);
             const user = recv['user'];
@@ -85,7 +84,7 @@ apiDescribe('Smoke Test', (persistence: boolean) => {
           message: 'We are actually writing data!'
         };
 
-        const accum = new EventsAccumulator<firestore.DocumentSnapshot>();
+        const accum = new EventsAccumulator<DocumentSnapshot>();
         return writerRef.set(data).then(() => {
           const unlisten = readerRef.onSnapshot(accum.storeEvent);
           return accum
@@ -105,7 +104,7 @@ apiDescribe('Smoke Test', (persistence: boolean) => {
       persistence,
       {},
       collection => {
-        const accum = new EventsAccumulator<firestore.QuerySnapshot>();
+        const accum = new EventsAccumulator<QuerySnapshot>();
         const unlisten = collection.onSnapshot(accum.storeEvent);
         return accum
           .awaitEvent()
