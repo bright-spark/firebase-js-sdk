@@ -188,13 +188,10 @@ export class FirestoreError extends Error {
 export type FirestoreErrorCode = 'cancelled' | 'unknown' | 'invalid-argument' | 'deadline-exceeded' | 'not-found' | 'already-exists' | 'permission-denied' | 'resource-exhausted' | 'failed-precondition' | 'aborted' | 'out-of-range' | 'unimplemented' | 'internal' | 'unavailable' | 'data-loss' | 'unauthenticated';
 
 // @public
-export interface FirestoreSettings {
+export interface FirestoreSettings extends Settings {
     cacheSizeBytes?: number;
     experimentalAutoDetectLongPolling?: boolean;
     experimentalForceLongPolling?: boolean;
-    host?: string;
-    ignoreUndefinedProperties?: boolean;
-    ssl?: boolean;
 }
 
 // @public
@@ -405,6 +402,13 @@ export type SetOptions = {
 } | {
     readonly mergeFields?: Array<string | FieldPath>;
 };
+
+// @public
+export interface Settings {
+    host?: string;
+    ignoreUndefinedProperties?: boolean;
+    ssl?: boolean;
+}
 
 // @public
 export function snapshotEqual<T>(left: DocumentSnapshot<T> | QuerySnapshot<T>, right: DocumentSnapshot<T> | QuerySnapshot<T>): boolean;
