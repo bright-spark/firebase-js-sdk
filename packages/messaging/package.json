@@ -56,8 +56,8 @@
   },
   "devDependencies": {
     "@firebase/app": "0.7.11",
-    "rollup": "2.57.0",
-    "rollup-plugin-typescript2": "0.30.0",
+    "rollup": "2.62.0",
+    "rollup-plugin-typescript2": "0.31.1",
     "@rollup/plugin-json": "4.1.0",
     "ts-essentials": "8.1.0",
     "typescript": "4.2.2"
